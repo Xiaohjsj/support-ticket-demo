@@ -1,0 +1,1688 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>技术支持工单</title>
+<style>
+/* ========== 设计 token ========== */
+:root {
+  --primary: #1677FF;
+  --primary-hover: #4096FF;
+  --primary-active: #0958D9;
+  --danger: #FF4D4F;
+  --warning: #FAAD14;
+  --success: #52C41A;
+  --info: #1677FF;
+  --bg: #F5F7FA;
+  --surface: #FFFFFF;
+  --surface-hover: #FAFAFA;
+  --text: #262626;
+  --text-secondary: #595959;
+  --text-muted: #8C8C8C;
+  --text-disabled: #BFBFBF;
+  --border: #E5E7EB;
+  --border-light: #F0F0F0;
+  --divider: #F0F0F0;
+  --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.03), 0 1px 6px -1px rgba(0,0,0,0.02);
+  --shadow-md: 0 3px 6px -4px rgba(0,0,0,0.12), 0 6px 16px 0 rgba(0,0,0,0.08);
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --font: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+  --sidebar-width: 56px;
+  --tabbar-height: 56px;
+  --header-height: 48px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+  font-family: var(--font);
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+input, textarea, select { font-family: inherit; font-size: inherit; }
+a { color: inherit; text-decoration: none; }
+ul { list-style: none; }
+img { max-width: 100%; display: block; }
+
+/* ========== App 容器（响应式网页：移动端底部 tabbar + 宽屏侧边栏） ========== */
+.app {
+  min-height: 100vh;
+  display: flex;
+  background: var(--bg);
+}
+.sidebar { display: none; }
+.mobile-frame {
+  flex: 1;
+  height: 100vh;
+  min-height: 100vh;
+  position: relative;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 桌面/宽屏：侧边栏固定 + 主内容自适应 */
+@media (min-width: 900px) {
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    width: 220px;
+    flex-shrink: 0;
+    background: #001529;
+    color: #fff;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  .sidebar-logo {
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 600;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    letter-spacing: 1px;
+    padding: 0 16px;
+  }
+  .sidebar-logo .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--primary); margin-right: 8px;
+  }
+  .sidebar-menu { padding: 12px 0; }
+  .sidebar-item {
+    display: flex; align-items: center;
+    padding: 12px 24px; color: rgba(255,255,255,0.65);
+    font-size: 14px; cursor: pointer;
+    transition: all .2s;
+  }
+  .sidebar-item:hover { color: #fff; background: rgba(255,255,255,0.04); }
+  .sidebar-item.active { color: #fff; background: var(--primary); }
+  .sidebar-item .icon { margin-right: 10px; font-size: 16px; width: 18px; text-align: center; }
+  /* 宽屏下隐藏底部 tabbar，用侧边栏导航 */
+  .tabbar { display: none !important; }
+  /* 主内容区宽屏下给最大宽度让卡片更舒展 */
+  .mobile-frame { max-width: none; }
+  .views { padding-bottom: 24px; }
+  .card, .timeline, .chat-section { margin: 16px 24px; }
+  .ticket-list { padding: 0 24px 24px; }
+  .form { padding: 24px; max-width: 800px; }
+  .filter-bar { padding: 14px 24px; }
+  .profile-header, .profile-menu { margin: 16px 24px; max-width: 600px; }
+  .dashboard-summary { padding: 24px; }
+  .msg-list { max-width: 720px; margin: 0 auto; }
+}
+@media (min-width: 1200px) {
+  .mobile-frame { padding: 0; }
+}
+
+/* ========== 顶部导航 ========== */
+.header {
+  height: var(--header-height);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  flex-shrink: 0;
+  position: sticky; top: 0; z-index: 10;
+}
+.header-back {
+  width: 32px; height: 32px; display: flex; align-items: center;
+  justify-content: center; border-radius: 50%;
+  font-size: 18px; color: var(--text-secondary);
+}
+.header-back:active { background: var(--surface-hover); }
+.header-title { flex: 1; text-align: center; font-size: 16px; font-weight: 600; }
+.header-right { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 12px; }
+
+/* ========== 路由视图 ========== */
+.views {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-top: 0;
+  padding-bottom: calc(var(--tabbar-height) + 80px);
+}
+.views.view-detail { padding-bottom: 76px; }
+.view { display: none; animation: fadeIn .2s; }
+.view.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* ========== 底部 Tab Bar（仅移动端显示，宽屏由侧边栏替代） ========== */
+.tabbar {
+  position: fixed;
+  bottom: 0; left: 0;
+  width: 100%;
+  height: var(--tabbar-height);
+  background: var(--surface);
+  border-top: 1px solid var(--border-light);
+  display: flex;
+  z-index: 20;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.tabbar-item {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 2px; color: var(--text-muted);
+  font-size: 11px; padding: 6px 0;
+  transition: color .15s;
+  position: relative;
+}
+.tabbar-item .icon { font-size: 20px; line-height: 1; }
+.tabbar-item.active { color: var(--primary); }
+.tabbar-item.disabled { color: var(--text-disabled); opacity: .5; }
+.tabbar-item .badge {
+  position: absolute; top: 4px; right: 50%;
+  transform: translateX(16px);
+  background: var(--danger); color: #fff;
+  font-size: 10px; min-width: 16px; height: 16px;
+  border-radius: 8px; padding: 0 4px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ========== 卡片 ========== */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  margin: 12px;
+  overflow: hidden;
+}
+.card-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--divider);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-header h3 { font-size: 15px; font-weight: 600; }
+.card-body { padding: 16px; }
+
+/* ========== 按钮 ========== */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 4px; padding: 7px 18px; border-radius: var(--radius-md);
+  font-size: 13px; font-weight: 500; letter-spacing: .3px;
+  transition: all .18s ease; white-space: nowrap;
+  border: 1px solid transparent;
+  line-height: 1.4;
+}
+.btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+.btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
+.btn-primary:active { background: var(--primary-active); border-color: var(--primary-active); }
+.btn-default { background: var(--surface); color: var(--text-secondary); border: 1px solid var(--border); }
+.btn-default:hover { color: var(--primary); border-color: var(--primary); }
+.btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+.btn-danger:hover { background: #FF7875; border-color: #FF7875; }
+.btn-outline-danger { background: var(--surface); color: var(--danger); border-color: #FFCCC7; }
+.btn-outline-danger:hover { background: #FFF2F0; }
+.btn-ghost { background: transparent; color: var(--primary); padding: 4px 8px; }
+.btn-block { width: 100%; padding: 12px; font-size: 14px; border-radius: var(--radius-md); }
+.btn-sm { padding: 4px 12px; font-size: 12px; border-radius: var(--radius-sm); }
+.btn:disabled { opacity: .4; pointer-events: none; }
+
+/* ========== 标签/徽章 ========== */
+.tag {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; border-radius: 10px;
+  font-size: 11px; font-weight: 500;
+}
+.tag-blue { background: #E6F4FF; color: var(--primary); }
+.tag-green { background: #F6FFED; color: var(--success); }
+.tag-orange { background: #FFF7E6; color: var(--warning); }
+.tag-red { background: #FFF2F0; color: var(--danger); }
+.tag-gray { background: #F5F5F5; color: var(--text-secondary); }
+.tag-purple { background: #F9F0FF; color: #722ED1; }
+
+/* ========== 工单列表页 ========== */
+.filter-bar {
+  display: flex; gap: 8px; padding: 12px;
+  overflow-x: auto; background: var(--surface);
+  border-bottom: 1px solid var(--divider);
+  flex-shrink: 0;
+}
+.filter-bar::-webkit-scrollbar { display: none; }
+.filter-chip {
+  flex-shrink: 0; padding: 5px 14px;
+  border-radius: 16px; font-size: 12px;
+  background: var(--bg); color: var(--text-secondary);
+  border: 1px solid transparent;
+  transition: all .15s;
+}
+.filter-chip.active { background: #E6F4FF; color: var(--primary); border-color: #91CAFF; font-weight: 500; }
+
+.ticket-list { padding: 0 12px 12px; }
+.ticket-item {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);
+  border: 1px solid var(--border-light);
+  transition: transform .18s, box-shadow .18s, border-color .18s;
+  position: relative;
+}
+.ticket-item:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  border-color: #D6E4FF;
+  transform: translateY(-1px);
+}
+.ticket-item:active { transform: scale(0.995); }
+.ticket-top {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 6px; gap: 10px;
+}
+.ticket-title {
+  font-size: 15px; font-weight: 600; flex: 1;
+  color: var(--text); line-height: 1.4;
+}
+.ticket-id { font-size: 11px; color: var(--text-muted); font-family: 'Menlo', monospace; background: var(--bg); padding: 1px 6px; border-radius: 3px; }
+.ticket-desc {
+  font-size: 12px; color: var(--text-muted);
+  margin: 8px 0 10px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  line-height: 1.6;
+}
+.ticket-meta {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 11px; color: var(--text-muted);
+  padding-top: 8px;
+  border-top: 1px dashed var(--divider);
+}
+.ticket-parties { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; max-width: 60%; }
+.ticket-parties .arrow { color: var(--text-disabled); font-size: 10px; }
+.ticket-stage { color: var(--primary); font-weight: 500; }
+.ticket-deadline { font-weight: 500; color: var(--text-secondary); }
+
+/* 悬浮新建按钮 */
+.fab {
+  position: fixed; right: 20px; bottom: 150px;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--primary); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-md);
+  z-index: 15; font-size: 24px;
+  transition: transform .15s;
+}
+.fab:active { transform: scale(0.9); }
+
+/* ========== 发起工单页 ========== */
+.form { padding: 12px; }
+.form-group {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 0 16px;
+  margin-bottom: 10px;
+  box-shadow: var(--shadow-sm);
+}
+.form-group-title {
+  padding: 12px 0 8px; font-size: 13px; font-weight: 600;
+  color: var(--text-secondary);
+}
+.form-field {
+  padding: 12px 0; border-bottom: 1px solid var(--divider);
+}
+.form-field:last-child { border-bottom: none; }
+.form-label {
+  display: block; font-size: 12px; color: var(--text-muted);
+  margin-bottom: 6px;
+}
+.form-label .required { color: var(--danger); margin-right: 2px; }
+.form-input, .form-textarea, .form-select {
+  width: 100%; border: none; outline: none;
+  font-size: 14px; color: var(--text);
+  background: transparent;
+}
+.form-input::placeholder, .form-textarea::placeholder { color: var(--text-disabled); }
+.form-textarea { resize: none; min-height: 80px; line-height: 1.6; }
+.form-select {
+  appearance: none; padding-right: 16px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238C8C8C' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right center;
+}
+
+/* 附件上传区 */
+.upload-area {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  padding-top: 4px;
+}
+.upload-item {
+  width: 72px; height: 72px; border-radius: var(--radius-md);
+  background: var(--bg); display: flex;
+  align-items: center; justify-content: center;
+  font-size: 24px; color: var(--text-muted);
+  border: 1px dashed var(--border);
+  position: relative; cursor: pointer;
+}
+.upload-item.image { border: 1px solid var(--border); background: var(--surface); padding: 0; overflow: hidden; }
+.upload-item.image img { width: 100%; height: 100%; object-fit: cover; }
+.upload-close {
+  position: absolute; top: -6px; right: -6px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--danger); color: #fff; font-size: 11px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* 表单底部提交 */
+.form-submit {
+  padding: 16px 12px 12px;
+}
+
+/* ========== 工单详情页 ========== */
+.detail-header {
+  background: var(--surface); padding: 12px 16px;
+  border-bottom: 1px solid var(--divider);
+}
+.detail-status-row {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+}
+.detail-status { font-size: 18px; font-weight: 700; }
+.detail-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; line-height: 1.4; }
+.detail-id { font-size: 12px; color: var(--text-muted); font-family: monospace; margin-bottom: 8px; }
+.detail-info-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px;
+  font-size: 12px;
+}
+.detail-info-item .k { color: var(--text-muted); }
+.detail-info-item .v { color: var(--text); font-weight: 500; }
+
+/* 详情概览：基础信息与处理时间轴并排 */
+.detail-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(300px, .9fr);
+  gap: 10px;
+  margin: 10px 12px;
+  align-items: start;
+}
+.detail-basic-card {
+  min-width: 0;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 12px 14px;
+  box-shadow: var(--shadow-sm);
+}
+.detail-basic-card .detail-info-grid { gap: 7px 14px; }
+.detail-basic-card .detail-description {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: var(--bg);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.detail-basic-card .detail-description strong {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--text);
+}
+
+/* 流程时间轴 */
+.timeline {
+  background: var(--surface); margin: 10px 12px; border-radius: var(--radius-lg);
+  padding: 11px 14px; box-shadow: var(--shadow-sm);
+}
+.timeline-title { font-size: 13px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.timeline-item {
+  display: flex; gap: 8px; padding-bottom: 8px;
+  position: relative;
+}
+.timeline-item:not(:last-child)::before {
+  content: ''; position: absolute; left: 7px; top: 18px;
+  width: 1px; height: calc(100% - 4px); background: var(--divider);
+}
+.timeline-dot {
+  width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0;
+  background: var(--primary); border: 3px solid #E6F4FF; margin-top: 2px;
+  z-index: 1;
+}
+.timeline-dot.warning { background: var(--warning); border-color: #FFF7E6; }
+.timeline-dot.danger { background: var(--danger); border-color: #FFF2F0; }
+.timeline-dot.success { background: var(--success); border-color: #F6FFED; }
+.timeline-dot.gray { background: var(--text-disabled); border-color: #F5F5F5; }
+.timeline-content { flex: 1; min-width: 0; }
+.timeline-actor { display: inline; font-size: 12px; font-weight: 600; color: var(--text); }
+.timeline-action { display: inline; font-size: 12px; color: var(--text-secondary); }
+.timeline-time { display: inline; font-size: 11px; color: var(--text-muted); margin-left: 8px; white-space: nowrap; }
+
+/* 沟通区（聊天气泡） */
+.chat-section {
+  background: var(--surface); margin: 10px 12px; border-radius: var(--radius-lg);
+  padding: 12px 14px; box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+}
+.chat-title {
+  font-size: 13px; font-weight: 600; margin-bottom: 10px;
+  display: flex; justify-content: space-between; align-items: center;
+  padding-bottom: 8px; border-bottom: 1px solid var(--divider);
+}
+.chat-title .count { font-size: 12px; font-weight: normal; color: var(--text-muted); }
+
+.chat-list { display: flex; flex-direction: column; gap: 10px; }
+.chat-bubble { display: flex; gap: 8px; }
+.chat-bubble.mine { flex-direction: row-reverse; }
+.chat-avatar {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; color: #fff; font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+}
+.chat-avatar.agent { background: #1677FF; }
+.chat-avatar.sp { background: #52C41A; }
+.chat-avatar.fae { background: #722ED1; }
+.chat-avatar.hq { background: #FA8C16; }
+.chat-avatar.cs { background: #13C2C2; }
+.chat-avatar.admin { background: #EB2F96; }
+.chat-avatar.dealer { background: #2F54EB; }
+
+.chat-body { max-width: 78%; min-width: 60px; }
+.chat-meta { font-size: 11px; color: var(--text-muted); margin-bottom: 5px; display: flex; gap: 6px; }
+.chat-bubble.mine .chat-meta { justify-content: flex-end; }
+.chat-name { font-weight: 500; color: var(--text-secondary); }
+.chat-role-tag {
+  display: inline-block; padding: 0 6px; border-radius: 2px;
+  background: var(--bg); color: var(--text-muted); font-size: 10px;
+}
+.chat-msg {
+  padding: 8px 11px; border-radius: 12px 12px 12px 2px;
+  background: #F5F7FA; font-size: 13px; line-height: 1.7;
+  color: var(--text);
+  word-break: break-word;
+}
+.chat-bubble.mine .chat-msg {
+  background: linear-gradient(135deg, #1677FF 0%, #0958D9 100%);
+  color: #fff; border-radius: 12px 12px 2px 12px;
+}
+
+.chat-attachments { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.chat-attach {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 4px 8px; font-size: 11px;
+  display: flex; align-items: center; gap: 4px; color: var(--text-secondary);
+}
+.chat-attach img { width: 48px; height: 48px; border-radius: 4px; object-fit: cover; cursor: pointer; }
+
+/* 详情页底部固定操作栏（挂在最外层主框架） */
+.detail-actions {
+  position: fixed;
+  z-index: 25;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  min-height: 64px;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  background: rgba(255,255,255,.97);
+  border-top: 1px solid var(--border-light);
+  box-shadow: 0 -4px 16px rgba(0,0,0,.08);
+  backdrop-filter: blur(10px);
+}
+.detail-actions .btn {
+  flex: 1;
+  min-width: 0;
+  padding-left: 8px;
+  padding-right: 8px;
+  flex-shrink: 0;
+}
+.detail-reply-box {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  margin: 10px 12px; padding: 12px 14px;
+}
+.detail-reply-box textarea { min-height: 58px; }
+.detail-reply-box textarea {
+  width: 100%; min-height: 58px; resize: vertical;
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  padding: 10px 12px; font-size: 13px; background: var(--bg);
+  font-family: inherit; outline: none;
+  transition: border-color .15s;
+}
+.detail-reply-box textarea:focus { border-color: var(--primary); background: var(--surface); }
+.detail-reply-box .reply-bar {
+  display: flex; gap: 8px; margin-top: 10px; align-items: center;
+}
+.detail-reply-box .reply-hint { font-size: 12px; color: var(--text-muted); flex: 1; }
+@media (min-width: 900px) {
+  .detail-actions {
+    left: 220px;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+  .detail-actions .btn { flex: 0 1 auto; min-width: 104px; }
+  .detail-reply-box { margin: 12px 24px; }
+}
+
+/* ========== 消息中心 ========== */
+.msg-tabs {
+  display: flex; background: var(--surface); border-bottom: 1px solid var(--divider);
+  flex-shrink: 0;
+}
+.msg-tab {
+  flex: 1; padding: 12px 0; text-align: center; font-size: 13px;
+  color: var(--text-secondary); position: relative; cursor: pointer;
+}
+.msg-tab.active { color: var(--primary); font-weight: 600; }
+.msg-tab.active::after {
+  content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 20px; height: 2px; background: var(--primary); border-radius: 1px;
+}
+.msg-list { padding: 0; }
+.msg-item {
+  display: flex; gap: 12px; padding: 14px 16px;
+  background: var(--surface); border-bottom: 1px solid var(--divider);
+  transition: background .1s;
+}
+.msg-item.unread { background: #FFFBE6; }
+.msg-item:active { background: var(--surface-hover); }
+.msg-icon {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.msg-icon.blue { background: #E6F4FF; color: var(--primary); }
+.msg-icon.orange { background: #FFF7E6; color: var(--warning); }
+.msg-icon.red { background: #FFF2F0; color: var(--danger); }
+.msg-icon.green { background: #F6FFED; color: var(--success); }
+.msg-body { flex: 1; min-width: 0; }
+.msg-title { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+.msg-content { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+.msg-time { font-size: 11px; color: var(--text-disabled); }
+.msg-unread-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); margin-top: 4px; flex-shrink: 0; }
+
+/* ========== 时效看板 ========== */
+.dashboard-summary {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; padding: 12px;
+}
+.stat-card {
+  background: var(--surface); border-radius: var(--radius-lg);
+  padding: 14px; box-shadow: var(--shadow-sm);
+}
+.stat-label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+.stat-value { font-size: 22px; font-weight: 700; }
+.stat-value.blue { color: var(--primary); }
+.stat-value.orange { color: var(--warning); }
+.stat-value.green { color: var(--success); }
+.stat-value.red { color: var(--danger); }
+.stat-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+.bar-chart { padding: 0 12px; }
+.bar-row {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 10px; font-size: 12px;
+}
+.bar-label { width: 70px; flex-shrink: 0; color: var(--text-secondary); }
+.bar-track { flex: 1; height: 20px; background: var(--bg); border-radius: 10px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 10px; display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; color: #fff; font-size: 10px; font-weight: 600; transition: width .4s; }
+.bar-fill.blue { background: linear-gradient(90deg, #91CAFF, var(--primary)); }
+.bar-fill.orange { background: linear-gradient(90deg, #FFD591, var(--warning)); }
+.bar-fill.red { background: linear-gradient(90deg, #FFBBB6, var(--danger)); }
+.bar-fill.green { background: linear-gradient(90deg, #B7EB8F, var(--success)); }
+.bar-num { width: 40px; text-align: right; color: var(--text-secondary); font-weight: 500; }
+
+/* ========== 我的 ========== */
+.profile-header {
+  background: linear-gradient(135deg, var(--primary) 0%, #0958D9 100%);
+  padding: 24px 20px; color: #fff; margin: 12px; border-radius: var(--radius-lg);
+  display: flex; align-items: center; gap: 14px;
+  box-shadow: var(--shadow-md);
+}
+.profile-avatar {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: rgba(255,255,255,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 600;
+}
+.profile-info .name { font-size: 18px; font-weight: 600; }
+.profile-info .org { font-size: 12px; opacity: .85; margin-top: 2px; }
+.profile-info .cur-role { font-size: 12px; opacity: .85; margin-top: 4px; background: rgba(255,255,255,0.15); padding: 2px 8px; border-radius: 10px; display: inline-block; }
+
+.profile-menu { background: var(--surface); margin: 12px; border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); }
+.profile-menu-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; border-bottom: 1px solid var(--divider);
+  font-size: 14px; color: var(--text);
+}
+.profile-menu-item:last-child { border-bottom: none; }
+.profile-menu-item:active { background: var(--surface-hover); }
+.profile-menu-item .left { display: flex; align-items: center; gap: 10px; }
+.profile-menu-item .icon { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.profile-menu-item .arrow { color: var(--text-disabled); font-size: 14px; }
+
+/* ========== 角色切换悬浮按钮 ========== */
+.role-switcher {
+  position: fixed; bottom: 76px; right: 16px;
+  z-index: 30;
+}
+.detail-mode .role-switcher { bottom: 140px; }
+.role-switcher-btn {
+  display: flex; align-items: center; gap: 4px;
+  padding: 8px 12px; background: var(--primary);
+  color: #fff; border-radius: 20px;
+  font-size: 12px; font-weight: 500;
+  box-shadow: var(--shadow-md);
+  transition: all .2s;
+  white-space: nowrap;
+}
+.role-switcher-btn:active { transform: scale(0.95); }
+.role-switcher-btn .caret { font-size: 10px; transition: transform .2s; }
+.role-switcher-btn.open .caret { transform: rotate(180deg); }
+
+.role-menu {
+  position: absolute; bottom: 48px; right: 0;
+  background: var(--surface); border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md); min-width: 180px;
+  overflow: hidden; display: none;
+  border: 1px solid var(--border-light);
+}
+.role-menu.open { display: block; animation: popIn .15s; }
+@keyframes popIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.role-menu-item {
+  padding: 10px 14px; font-size: 13px;
+  cursor: pointer; display: flex; align-items: center; gap: 8px;
+  color: var(--text-secondary);
+}
+.role-menu-item:hover { background: var(--surface-hover); }
+.role-menu-item.active { background: #E6F4FF; color: var(--primary); font-weight: 600; }
+.role-menu-item .check { margin-left: auto; font-size: 14px; }
+.role-menu-item .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+}
+
+/* ========== 上升处理确认弹窗 ========== */
+.confirm-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, .46);
+}
+.confirm-modal.open { display: flex; animation: fadeIn .15s; }
+.confirm-dialog {
+  width: min(100%, 360px);
+  padding: 22px 20px 18px;
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: 0 16px 48px rgba(0,0,0,.2);
+  text-align: center;
+}
+.confirm-icon {
+  width: 42px;
+  height: 42px;
+  margin: 0 auto 10px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #E6F4FF;
+  color: var(--primary);
+  font-size: 24px;
+  font-weight: 700;
+}
+.confirm-title { font-size: 16px; font-weight: 700; color: var(--text); }
+.confirm-text {
+  margin: 10px 0 18px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.7;
+}
+.confirm-actions { display: flex; gap: 10px; }
+.confirm-actions .btn { flex: 1; }
+
+/* ========== 详情页图片预览模态 ========== */
+.image-modal {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+  z-index: 100; display: none; align-items: center; justify-content: center;
+}
+.image-modal.open { display: flex; animation: fadeIn .15s; }
+.image-modal img { max-width: 95vw; max-height: 90vh; object-fit: contain; border-radius: 4px; }
+.image-modal-close {
+  position: absolute; top: 20px; right: 20px;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(255,255,255,0.2); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+
+/* 空状态 */
+.empty {
+  padding: 60px 20px; text-align: center; color: var(--text-muted);
+}
+.empty .icon { font-size: 48px; margin-bottom: 12px; opacity: .3; }
+.empty .text { font-size: 13px; }
+
+/* loading more */
+.loading-more { text-align: center; padding: 16px; color: var(--text-muted); font-size: 12px; }
+
+/* 响应式 */
+@media (max-width: 899px) {
+  .detail-overview { grid-template-columns: 1fr; }
+  .detail-overview .timeline { margin: 0; }
+}
+@media (max-width: 360px) {
+  .detail-info-grid { grid-template-columns: 1fr; }
+  .chat-body { max-width: 75%; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- ===== 桌面端侧边栏（仅宽屏显示） ===== -->
+  <aside class="sidebar">
+    <div class="sidebar-logo"><span class="dot"></span>技术支持</div>
+    <nav class="sidebar-menu">
+      <div class="sidebar-item active" data-tab="list"><span class="icon">📋</span>工单列表</div>
+      <div class="sidebar-item" data-tab="create"><span class="icon">✏️</span>发起工单</div>
+      <div class="sidebar-item" data-tab="messages"><span class="icon">🔔</span>消息中心</div>
+      <div class="sidebar-item" data-tab="dashboard"><span class="icon">📊</span>时效看板</div>
+      <div class="sidebar-item" data-tab="profile"><span class="icon">👤</span>我的</div>
+    </nav>
+  </aside>
+
+  <!-- ===== 移动端主框架 ===== -->
+  <div class="mobile-frame">
+
+    <!-- ===== 顶部导航 ===== -->
+    <header class="header" id="header">
+      <div class="header-back" id="headerBack" style="display:none">‹</div>
+      <div class="header-title" id="headerTitle">工单列表</div>
+      <div class="header-right" id="headerRight"></div>
+    </header>
+
+    <!-- ===== 路由视图容器 ===== -->
+    <main class="views" id="views">
+
+      <!-- =============== 工单列表 =============== -->
+      <section class="view active" data-route="list">
+        <div class="filter-bar" id="filterBar">
+          <button class="filter-chip active" data-status="all">全部</button>
+          <button class="filter-chip" data-status="pending">待处理</button>
+          <button class="filter-chip" data-status="processing">处理中</button>
+          <button class="filter-chip" data-status="escalated">已上升</button>
+          <button class="filter-chip" data-status="resolved">已解决</button>
+          <button class="filter-chip" data-status="closed">已关单</button>
+        </div>
+        <div class="ticket-list" id="ticketList"></div>
+      </section>
+
+      <!-- =============== 发起工单 =============== -->
+      <section class="view" data-route="create">
+        <form class="form" id="createForm" onsubmit="return false;">
+          <div class="form-group">
+            <div class="form-group-title">工单信息</div>
+            <div class="form-field">
+              <label class="form-label"><span class="required">*</span>工单标题</label>
+              <input type="text" class="form-input" id="f-title" placeholder="简要描述问题，例如：XX型号设备上电后无法启动">
+            </div>
+            <div class="form-field">
+              <label class="form-label"><span class="required">*</span>问题分类</label>
+              <select class="form-select" id="f-category">
+                <option value="">请选择问题分类</option>
+                <option>硬件故障</option><option>软件问题</option><option>安装调试</option>
+                <option>使用咨询</option><option>配件申请</option><option>其他</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label class="form-label"><span class="required">*</span>紧急程度</label>
+              <select class="form-select" id="f-urgency">
+                <option value="P1">P1 - 紧急（业务中断）</option>
+                <option value="P2" selected>P2 - 高（影响部分业务）</option>
+                <option value="P3">P3 - 中（有替代方案）</option>
+                <option value="P4">P4 - 低（建议优化）</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="form-group-title">详细描述</div>
+            <div class="form-field">
+              <label class="form-label"><span class="required">*</span>问题现象</label>
+              <textarea class="form-textarea" id="f-desc" placeholder="请详细描述问题现象、复现步骤、期望结果等，帮助技术人员更快定位问题"></textarea>
+            </div>
+            <div class="form-field">
+              <label class="form-label">附件（图片/视频/文档）</label>
+              <div class="upload-area" id="uploadArea">
+                <div class="upload-item" id="uploadBtn">+</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="form-group-title">关联工单（可选）</div>
+            <div class="form-field">
+              <label class="form-label">关联维修/预约单号</label>
+              <input type="text" class="form-input" placeholder="输入已有工单号进行关联">
+            </div>
+          </div>
+
+          <div class="form-submit">
+            <button type="button" class="btn btn-primary btn-block" id="submitBtn">提交工单</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- =============== 消息中心 =============== -->
+      <section class="view" data-route="messages">
+        <div class="msg-tabs">
+          <div class="msg-tab active" data-mtype="all">全部</div>
+          <div class="msg-tab" data-mtype="ticket">工单回复</div>
+          <div class="msg-tab" data-mtype="notify">系统通知</div>
+          <div class="msg-tab" data-mtype="timeout">超时提醒</div>
+        </div>
+        <div class="msg-list" id="msgList"></div>
+      </section>
+
+      <!-- =============== 时效看板 =============== -->
+      <section class="view" data-route="dashboard">
+        <div class="dashboard-summary">
+          <div class="stat-card"><div class="stat-label">待处理工单</div><div class="stat-value orange">12</div><div class="stat-sub">较昨日 +3</div></div>
+          <div class="stat-card"><div class="stat-label">超时工单</div><div class="stat-value red">3</div><div class="stat-sub">需紧急处理</div></div>
+          <div class="stat-card"><div class="stat-label">本月已解决</div><div class="stat-value blue">87</div><div class="stat-sub">较上月 +12%</div></div>
+          <div class="stat-card"><div class="stat-label">平均响应时效</div><div class="stat-value green">2.1h</div><div class="stat-sub">目标 ≤4h</div></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>各角色处理时效</h3><span style="font-size:11px;color:#8C8C8C">单位：小时</span></div>
+          <div class="card-body">
+            <div class="bar-chart" id="roleBarChart"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>超时原因 TOP 5</h3></div>
+          <div class="card-body">
+            <div class="bar-chart" id="reasonBarChart"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>本周处理趋势</h3></div>
+          <div class="card-body" style="display:flex;gap:6px;align-items:flex-end;height:140px;padding:16px 8px 4px">
+            <!-- JS 动态填充柱 -->
+          </div>
+          <div class="card-body" style="display:flex;gap:6px;padding:0 8px 8px;font-size:11px;color:#8C8C8C">
+            <span style="flex:1;text-align:center">周一</span>
+            <span style="flex:1;text-align:center">周二</span>
+            <span style="flex:1;text-align:center">周三</span>
+            <span style="flex:1;text-align:center">周四</span>
+            <span style="flex:1;text-align:center">周五</span>
+            <span style="flex:1;text-align:center">周六</span>
+            <span style="flex:1;text-align:center">周日</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- =============== 我的 =============== -->
+      <section class="view" data-route="profile">
+        <div class="profile-header">
+          <div class="profile-avatar" id="profileAvatar">管</div>
+          <div class="profile-info">
+            <div class="name" id="profileName">管理员</div>
+            <div class="org" id="profileOrg">集团总部 · 技术支持中心</div>
+            <span class="cur-role" id="profileRoleTag">当前角色：系统管理员</span>
+          </div>
+        </div>
+        <div class="profile-menu">
+          <div class="profile-menu-item"><div class="left"><span class="icon">📨</span>我的工单（23）</div><span class="arrow">›</span></div>
+          <div class="profile-menu-item"><div class="left"><span class="icon">✅</span>已解决（19）</div><span class="arrow">›</span></div>
+          <div class="profile-menu-item"><div class="left"><span class="icon">⏱</span>超时记录（2）</div><span class="arrow">›</span></div>
+          <div class="profile-menu-item"><div class="left"><span class="icon">⭐</span>客户评价（平均 4.8）</div><span class="arrow">›</span></div>
+        </div>
+        <div class="profile-menu">
+          <div class="profile-menu-item"><div class="left"><span class="icon">📞</span>联系管理员</div><span class="arrow">›</span></div>
+          <div class="profile-menu-item"><div class="left"><span class="icon">⚙️</span>账号设置</div><span class="arrow">›</span></div>
+          <div class="profile-menu-item"><div class="left"><span class="icon">❓</span>帮助与反馈</div><span class="arrow">›</span></div>
+          <div class="profile-menu-item"><div class="left"><span class="icon">ℹ️</span>关于系统 v1.2.0</div><span class="arrow">›</span></div>
+        </div>
+      </section>
+
+      <!-- =============== 工单详情（非 tab 路由） =============== -->
+      <section class="view" data-route="detail">
+        <div id="detailContent"></div>
+      </section>
+
+    </main>
+
+    <!-- ===== 悬浮新建按钮（列表页可见） ===== -->
+    <button class="fab" id="fab" style="display:none">+</button>
+
+    <!-- ===== 底部 Tab Bar ===== -->
+    <nav class="tabbar" id="tabbar">
+      <div class="tabbar-item active" data-tab="list">
+        <div class="icon">📋</div><div>工单</div>
+      </div>
+      <div class="tabbar-item" data-tab="create">
+        <div class="icon">✏️</div><div>发起</div>
+      </div>
+      <div class="tabbar-item" data-tab="messages">
+        <div class="icon">🔔</div><div>消息</div>
+        <span class="badge">5</span>
+      </div>
+      <div class="tabbar-item" data-tab="dashboard">
+        <div class="icon">📊</div><div>时效</div>
+      </div>
+      <div class="tabbar-item" data-tab="profile">
+        <div class="icon">👤</div><div>我的</div>
+      </div>
+    </nav>
+  </div>
+
+  <!-- ===== 角色切换悬浮按钮（右下角） ===== -->
+  <div class="role-switcher" id="roleSwitcher">
+    <button class="role-switcher-btn" id="roleSwitcherBtn">当前角色：管理员 ▾</button>
+    <ul class="role-menu" id="roleMenu"></ul>
+  </div>
+
+  <!-- ===== 上升处理确认弹窗 ===== -->
+  <div class="confirm-modal" id="escalateModal" aria-hidden="true">
+    <div class="confirm-dialog">
+      <div class="confirm-icon">↗</div>
+      <div class="confirm-title">确认上升处理？</div>
+      <div class="confirm-text" id="escalateMessage"></div>
+      <div class="confirm-actions">
+        <button class="btn btn-default" id="escalateCancel">取消</button>
+        <button class="btn btn-primary" id="escalateConfirm">确认上升</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 图片预览模态 ===== -->
+  <div class="image-modal" id="imageModal">
+    <button class="image-modal-close" id="imageModalClose">✕</button>
+    <img id="imageModalImg" src="" alt="">
+  </div>
+
+</div>
+
+<script>
+/* =========================================================
+   技术支持工单系统 - 核心逻辑
+   ========================================================= */
+
+// ============ 角色定义 ============
+const ROLES = {
+  admin:   { name: '系统管理员', color: '#EB2F96', avatarClass: 'admin', pages: ['*'], canReply: true, canEscalate: true, canClose: true, canCreate: true, scope: '全部工单' },
+  hq_fae:  { name: '总部技术支持', color: '#FA8C16', avatarClass: 'hq', pages: ['list','messages','dashboard','profile','detail'], canReply: true, canEscalate: false, canClose: true, canCreate: false, scope: '已上升到总部的工单' },
+  region_fae:{ name: '区域技术支持', color: '#722ED1', avatarClass: 'fae', pages: ['list','messages','dashboard','profile','detail'], canReply: true, canEscalate: true, canClose: true, canCreate: false, scope: '本区域工单' },
+  agent1:  { name: '一级代理商', color: '#2F54EB', avatarClass: 'dealer', pages: ['list','create','messages','profile','detail'], canReply: true, canEscalate: true, canClose: false, canCreate: true, scope: '自己+下级发起的工单' },
+  agent2:  { name: '二级代理商', color: '#1677FF', avatarClass: 'agent', pages: ['list','create','messages','profile','detail'], canReply: false, canEscalate: true, canClose: false, canCreate: true, scope: '自己发起的工单' },
+  service: { name: '服务商网点', color: '#52C41A', avatarClass: 'sp', pages: ['list','create','messages','profile','detail'], canReply: false, canEscalate: true, canClose: false, canCreate: true, scope: '自己发起的工单' },
+  cs:      { name: '客服', color: '#13C2C2', avatarClass: 'cs', pages: ['list','create','messages','dashboard','profile','detail'], canReply: true, canEscalate: true, canClose: false, canCreate: true, scope: '客服相关工单' }
+};
+let currentRole = 'admin';
+
+// ============ 路由 ============
+const HEADER_MAP = { list:'工单列表', create:'发起工单', messages:'消息中心', dashboard:'时效看板', profile:'我的', detail:'工单详情' };
+let currentRoute = 'list';
+let currentTicketId = null;
+
+function navigate(route, params = {}) {
+  currentRoute = route;
+  if (route === 'detail') currentTicketId = params.id;
+  location.hash = '#' + route + (params.id ? '/' + params.id : '');
+  render();
+}
+
+window.addEventListener('hashchange', parseHash);
+function parseHash() {
+  const h = location.hash.replace('#','');
+  if (!h) { navigate('list'); return; }
+  const parts = h.split('/');
+  if (parts[0] === 'detail') { navigate('detail', { id: parts[1] }); }
+  else { navigate(parts[0]); }
+}
+
+// ============ 渲染控制 ============
+function render() {
+  // 切换视图
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const active = document.querySelector(`.view[data-route="${currentRoute}"]`);
+  if (active) active.classList.add('active');
+
+  // 头部
+  document.getElementById('headerTitle').textContent = HEADER_MAP[currentRoute] || '';
+  document.getElementById('headerBack').style.display = (currentRoute === 'detail') ? 'flex' : 'none';
+
+  // Tab Bar 显隐
+  const showTabBar = ['list','create','messages','dashboard','profile'].includes(currentRoute);
+  document.getElementById('tabbar').style.display = showTabBar ? 'flex' : 'none';
+  document.getElementById('fab').style.display = (currentRoute === 'list') ? 'flex' : 'none';
+
+  // 详情页使用独立的固定底部操作层，正文预留底部空间
+  document.getElementById('views').classList.toggle('view-detail', currentRoute === 'detail');
+  document.body.classList.toggle('detail-mode', currentRoute === 'detail');
+
+  // 侧边栏激活态（桌面端）
+  document.querySelectorAll('.sidebar-item').forEach(s => {
+    s.classList.toggle('active', s.dataset.tab === currentRoute);
+  });
+  document.querySelectorAll('.tabbar-item').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === currentRoute);
+  });
+
+  // 权限过滤 tab
+  applyRolePermissions();
+
+  // 渲染内容
+  switch (currentRoute) {
+    case 'list': renderList(); break;
+    case 'create': break;
+    case 'messages': renderMessages(); break;
+    case 'dashboard': renderDashboard(); break;
+    case 'profile': renderProfile(); break;
+    case 'detail': renderDetail(); break;
+  }
+}
+
+// ============ 角色权限过滤 ============
+function applyRolePermissions() {
+  const role = ROLES[currentRole];
+  document.querySelectorAll('.tabbar-item').forEach(t => {
+    const tab = t.dataset.tab;
+    const allowed = role.pages.includes('*') || role.pages.includes(tab);
+    t.classList.toggle('disabled', !allowed);
+    if (!allowed) t.classList.remove('active');
+  });
+  // 侧边栏同步
+  document.querySelectorAll('.sidebar-item').forEach(s => {
+    const tab = s.dataset.tab;
+    const allowed = role.pages.includes('*') || role.pages.includes(tab);
+    s.style.opacity = allowed ? '1' : '0.4';
+    s.style.pointerEvents = allowed ? 'auto' : 'none';
+  });
+  // 发起按钮
+  document.getElementById('fab').style.display = (currentRoute === 'list' && role.canCreate) ? 'flex' : 'none';
+}
+
+// ============ 工单 Mock 数据 ============
+const TICKETS = [
+  { id:'TK20261101001', title:'XX-5000 工控机上电后蓝屏', category:'硬件故障', urgency:'P1',
+    status:'processing', desc:'客户现场两台工控机同时出现蓝屏，重启后可进入系统但半小时后再次蓝屏',
+    parties:'二级代理 → 一级代理 → 区域技术支持', current:'区域技术支持处理中',
+    createTime:'2026-11-03 09:12', lastUpdate:'2026-11-04 08:30', deadline:'2026-11-05 09:12', timeout:false,
+    messages:[
+      { role:'agent2', name:'二级代理 张工', roleLabel:'二级代理', time:'2026-11-03 09:12', text:'客户现场反馈两台工控机同时蓝屏，型号 XX-5000，SN 分别为 SN20260101001/002', attachments:[{type:'img', name:'现场照片', thumb:'', full:''}] },
+      { role:'agent1', name:'一级代理 李工', roleLabel:'一级代理', time:'2026-11-03 10:45', text:'已收到，初步判断可能是内存条接触问题，请现场拔插后重试。' },
+      { role:'agent2', name:'二级代理 张工', roleLabel:'二级代理', time:'2026-11-03 14:20', text:'已按建议操作，问题依旧。视频见附件。', attachments:[{type:'video', name:'故障视频.mp4'}, {type:'img', name:'内存特写.jpg'}] },
+      { role:'agent1', name:'一级代理 李工', roleLabel:'一级代理', time:'2026-11-03 16:00', text:'已上升给区域技术支持' },
+      { role:'region_fae', name:'区域FAE 王工', roleLabel:'区域技术支持', time:'2026-11-04 08:30', text:'正在远程协助排查，怀疑是主板电容问题，准备寄换主板。' },
+    ],
+    timeline:[
+      { actor:'二级代理 张工', action:'发起工单', time:'2026-11-03 09:12', dot:'blue' },
+      { actor:'一级代理 李工', action:'受理并首次答复', time:'2026-11-03 10:45', dot:'blue' },
+      { actor:'一级代理 李工', action:'上升至区域技术支持', time:'2026-11-03 16:00', dot:'orange' },
+      { actor:'区域FAE 王工', action:'接单处理中', time:'2026-11-04 08:30', dot:'blue' },
+    ] },
+  { id:'TK20261028007', title:'设备固件升级后无法识别传感器', category:'软件问题', urgency:'P2',
+    status:'escalated', desc:'升级到 V2.3.1 后，原有的 3 个传感器全部无法识别，回退后恢复正常',
+    parties:'服务商 → 客服 → 总部技术支持', current:'总部技术支持处理中',
+    createTime:'2026-10-28 15:30', lastUpdate:'2026-11-04 10:00', deadline:'2026-11-02 15:30', timeout:true,
+    messages:[
+      { role:'service', name:'服务商 赵工', roleLabel:'服务商', time:'2026-10-28 15:30', text:'升级 V2.3.1 后传感器全部丢失，已回退至 V2.2.5 恢复正常，请协助排查。' },
+      { role:'cs', name:'客服 小孙', roleLabel:'客服', time:'2026-10-29 09:00', text:'已登记，转给技术支持跟进。' },
+      { role:'hq_fae', name:'总部FAE 陈工', roleLabel:'总部技术支持', time:'2026-11-04 10:00', text:'收到，正在对比 V2.3.1 与 V2.2.5 的传感器驱动变更，预计今天给出补丁版本。' },
+    ],
+    timeline:[
+      { actor:'服务商 赵工', action:'发起工单', time:'2026-10-28 15:30', dot:'blue' },
+      { actor:'客服 小孙', action:'受理', time:'2026-10-29 09:00', dot:'blue' },
+      { actor:'客服 小孙', action:'上升至总部技术支持（超时未解决）', time:'2026-11-04 09:30', dot:'danger' },
+      { actor:'总部FAE 陈工', action:'接单处理中', time:'2026-11-04 10:00', dot:'blue' },
+    ] },
+  { id:'TK20261102015', title:'新机调试时通讯异常', category:'安装调试', urgency:'P3',
+    status:'pending', desc:'新到设备与上位机 Modbus TCP 通讯偶发超时，约每 2 小时出现一次',
+    parties:'客服 → 区域技术支持', current:'区域技术支持待接单',
+    createTime:'2026-11-02 11:20', lastUpdate:'2026-11-02 11:20', deadline:'2026-11-05 11:20', timeout:false,
+    messages:[
+      { role:'cs', name:'客服 小周', roleLabel:'客服', time:'2026-11-02 11:20', text:'客户反馈新设备偶发通讯超时，已上升给区域技术支持，请接单。' },
+    ],
+    timeline:[
+      { actor:'客服 小周', action:'发起并上升至区域技术支持', time:'2026-11-02 11:20', dot:'orange' },
+    ] },
+  { id:'TK20261025003', title:'触摸屏配件申请', category:'配件申请', urgency:'P4',
+    status:'resolved', desc:'客户现场触摸屏损坏，申请备件更换',
+    parties:'二级代理 → 一级代理 → 已解决', current:'已解决',
+    createTime:'2026-10-25 14:00', lastUpdate:'2026-11-01 16:00', deadline:'2026-10-28 14:00', timeout:true,
+    messages:[
+      { role:'agent2', name:'二级代理 刘工', roleLabel:'二级代理', time:'2026-10-25 14:00', text:'客户现场触摸屏损坏，型号 TP-1000，申请备件。' },
+      { role:'agent1', name:'一级代理 周工', roleLabel:'一级代理', time:'2026-10-26 10:00', text:'已审批通过，走紧急物流，预计 10/28 到。' },
+      { role:'agent2', name:'二级代理 刘工', roleLabel:'二级代理', time:'2026-11-01 16:00', text:'备件已收到并更换完成，客户确认正常。' },
+    ],
+    timeline:[
+      { actor:'二级代理 刘工', action:'发起工单', time:'2026-10-25 14:00', dot:'blue' },
+      { actor:'一级代理 周工', action:'审批通过', time:'2026-10-26 10:00', dot:'blue' },
+      { actor:'二级代理 刘工', action:'确认已完成', time:'2026-11-01 16:00', dot:'success' },
+    ] },
+  { id:'TK20261020009', title:'软件功能咨询', category:'使用咨询', urgency:'P4',
+    status:'closed', desc:'关于报表导出格式设置的咨询',
+    parties:'客服 → 已关单', current:'已关单',
+    createTime:'2026-10-20 09:00', lastUpdate:'2026-10-21 15:00', deadline:'2026-10-22 09:00', timeout:false,
+    messages:[
+      { role:'cs', name:'客服 小吴', roleLabel:'客服', time:'2026-10-20 09:00', text:'客户咨询报表导出格式。' },
+      { role:'cs', name:'客服 小吴', roleLabel:'客服', time:'2026-10-21 15:00', text:'已通过远程指导解决，客户满意。' },
+    ],
+    timeline:[
+      { actor:'客服 小吴', action:'发起工单', time:'2026-10-20 09:00', dot:'blue' },
+      { actor:'客服 小吴', action:'客户确认满意，关单', time:'2026-10-21 15:00', dot:'success' },
+    ] },
+  { id:'TK20261103002', title:'服务器无法启动', category:'硬件故障', urgency:'P1',
+    status:'closed', desc:'客户服务器启动后立即断电，冒烟',
+    parties:'服务商 → 客服 → 已关单', current:'已关单（非保修范围）',
+    createTime:'2026-11-03 07:30', lastUpdate:'2026-11-03 14:00', deadline:'-', timeout:false,
+    messages:[
+      { role:'service', name:'服务商 赵工', roleLabel:'服务商', time:'2026-11-03 07:30', text:'服务器冒烟，紧急！' },
+      { role:'cs', name:'客服 小孙', roleLabel:'客服', time:'2026-11-03 10:00', text:'核实：设备已过保 3 个月，且有明显人为拆解痕迹，不在保修范围内。' },
+      { role:'cs', name:'客服 小孙', roleLabel:'客服', time:'2026-11-03 14:00', text:'已关单，建议走付费维修通道。' },
+    ],
+    timeline:[
+      { actor:'服务商 赵工', action:'发起工单', time:'2026-11-03 07:30', dot:'red' },
+      { actor:'客服 小孙', action:'关单（非保修范围）', time:'2026-11-03 14:00', dot:'success' },
+    ] },
+];
+
+// ============ 工单状态/标签映射 ============
+const STATUS_MAP = {
+  pending:    { label:'待处理', tag:'tag-orange' },
+  processing: { label:'处理中', tag:'tag-blue' },
+  escalated:  { label:'已上升', tag:'tag-purple' },
+  resolved:   { label:'已解决', tag:'tag-green' },
+  closed:     { label:'已关单', tag:'tag-gray' }
+};
+
+// ============ 工单列表渲染 ============
+let currentListFilter = 'all';
+function renderList() {
+  const role = ROLES[currentRole];
+  let tickets = TICKETS.slice();
+  // 权限过滤
+  if (!role.pages.includes('*')) {
+    if (currentRole === 'hq_fae') tickets = tickets.filter(t => t.parties.includes('总部'));
+    else if (currentRole === 'region_fae') tickets = tickets.filter(t => t.parties.includes('区域'));
+    else if (currentRole.startsWith('agent')) tickets = tickets.filter(t => t.parties.includes('代理'));
+    else if (currentRole === 'service') tickets = tickets.filter(t => t.parties.includes('服务商'));
+    else if (currentRole === 'cs') tickets = tickets.filter(t => t.parties.includes('客服'));
+  }
+  if (currentListFilter !== 'all') tickets = tickets.filter(t => t.status === currentListFilter);
+
+  const list = document.getElementById('ticketList');
+  if (tickets.length === 0) {
+    list.innerHTML = `<div class="empty"><div class="icon">📭</div><div class="text">暂无工单数据</div></div>`;
+    return;
+  }
+  list.innerHTML = tickets.map(t => {
+    const st = STATUS_MAP[t.status];
+    const timeoutBadge = t.timeout ? `<span class="tag tag-red" style="margin-left:4px">⏱ 已超时</span>` : '';
+    return `
+      <div class="ticket-item" data-tid="${t.id}">
+        <div class="ticket-top">
+          <div class="ticket-title">${t.title}</div>
+          <span class="tag ${st.tag}">${st.label}</span>
+        </div>
+        <div class="ticket-id">${t.id} · ${t.category} · ${t.urgency}${timeoutBadge}</div>
+        <div class="ticket-desc">${t.desc}</div>
+        <div class="ticket-meta">
+          <div class="ticket-parties">
+            <span>${t.parties}</span>
+          </div>
+          <span class="ticket-stage">${t.current}</span>
+        </div>
+        <div class="ticket-meta" style="margin-top:4px;border:none;padding:0">
+          <span>🕐 ${t.lastUpdate}</span>
+          <span>截止：${t.deadline}</span>
+        </div>
+      </div>`;
+  }).join('');
+
+  // 点击跳转详情
+  list.querySelectorAll('.ticket-item').forEach(el => {
+    el.addEventListener('click', () => navigate('detail', { id: el.dataset.tid }));
+  });
+
+  // 过滤条事件
+  document.querySelectorAll('.filter-chip').forEach(c => {
+    c.onclick = () => {
+      document.querySelectorAll('.filter-chip').forEach(x => x.classList.remove('active'));
+      c.classList.add('active');
+      currentListFilter = c.dataset.status;
+      renderList();
+    };
+  });
+}
+
+// ============ 工单详情渲染 ============
+function renderDetail() {
+  const t = TICKETS.find(x => x.id === currentTicketId);
+  const el = document.getElementById('detailContent');
+  if (!t) { el.innerHTML = `<div class="empty"><div class="text">工单不存在</div></div>`; return; }
+  const st = STATUS_MAP[t.status];
+  const role = ROLES[currentRole];
+
+  // 操作按钮（根据角色权限和状态动态生成）— 内联在内容末尾
+  let actionBtns = [];
+  let replyBox = '';
+  if (['pending','processing','escalated'].includes(t.status)) {
+    if (t.status === 'pending' && role.canReply) actionBtns.push(`<button class="btn btn-primary" data-act="accept">确认承接</button>`);
+    if (role.canEscalate) actionBtns.push(`<button class="btn btn-default" data-act="escalate">上升处理</button>`);
+    if (role.canClose) actionBtns.push(`<button class="btn btn-outline-danger" data-act="close">关单</button>`);
+    // 回复输入框（有答复权限的角色可发消息）
+    if (role.canReply || role.canCreate) {
+      replyBox = `
+      <div class="detail-reply-box">
+        <textarea id="detailReply" placeholder="输入消息内容，支持文字、附件、图片..."></textarea>
+        <div class="reply-bar">
+          <button class="btn btn-default btn-sm" id="detailAttach">📎 附件</button>
+          <span class="reply-hint">Enter 发送 · Shift+Enter 换行</span>
+          <button class="btn btn-primary btn-sm" id="detailSend">发送</button>
+        </div>
+      </div>`;
+    }
+  } else {
+    // 已关闭状态也能回复（有回复权限的角色）
+    if (role.canReply || role.canCreate) {
+      replyBox = `
+      <div class="detail-reply-box" style="opacity:.7">
+        <textarea placeholder="工单已${STATUS_MAP[t.status].label}，仍可添加补充说明..." id="detailReplyClosed"></textarea>
+        <div class="reply-bar">
+          <button class="btn btn-default btn-sm" id="detailAttach2">📎 附件</button>
+          <span class="reply-hint">补充记录</span>
+          <button class="btn btn-default btn-sm" id="detailSend2">保存</button>
+        </div>
+      </div>`;
+    }
+  }
+
+  // 时间轴
+  const timelineHtml = `
+    <div class="timeline">
+      <div class="timeline-title">🕐 处理时间轴</div>
+      ${t.timeline.map(item => `
+        <div class="timeline-item">
+          <div class="timeline-dot ${item.dot}"></div>
+          <div class="timeline-content">
+            <div class="timeline-actor">${item.actor}</div>
+            <div class="timeline-action">${item.action}</div>
+            <div class="timeline-time">${item.time}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
+
+  // 沟通气泡
+  const chatHtml = `
+    <div class="chat-section">
+      <div class="chat-title">💬 多轮沟通记录 <span class="count">${t.messages.length} 条回复</span></div>
+      <div class="chat-list">
+        ${t.messages.map(m => {
+          const mine = (m.role === currentRole);
+          const attachHtml = m.attachments && m.attachments.length ? `
+            <div class="chat-attachments">
+              ${m.attachments.map(a => {
+                if (a.type === 'img') return `<div class="chat-attach" style="background:transparent;border:none;padding:0"><img src="https://trae-api-cn.mchost.guru/api/ide/v1/tool_text_to_image?prompt=technical+support+workplace+equipment&image_size=square" class="detail-preview-img"></div>`;
+                return `<div class="chat-attach">📎 ${a.name}</div>`;
+              }).join('')}
+            </div>` : '';
+          return `
+            <div class="chat-bubble ${mine ? 'mine' : ''}">
+              <div class="chat-avatar ${ROLES[m.role]?.avatarClass || 'agent'}">${(ROLES[m.role]?.name || m.role).slice(-2)}</div>
+              <div class="chat-body">
+                <div class="chat-meta">
+                  <span class="chat-name">${m.name}</span>
+                  <span class="chat-role-tag">${m.roleLabel}</span>
+                  <span>·</span>
+                  <span>${m.time}</span>
+                </div>
+                <div class="chat-msg">${m.text}</div>
+                ${attachHtml}
+              </div>
+            </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+
+  // 详情基础信息
+  const headHtml = `
+    <div class="detail-basic-card">
+      <div class="detail-status-row">
+        <span class="tag ${st.tag}">${st.label}</span>
+        ${t.timeout ? `<span class="tag tag-red">⏱ 已超时 ${Math.floor((Date.now()-new Date(t.deadline))/3600000)}h</span>` : ''}
+        <span style="flex:1"></span>
+        <span style="font-size:12px;color:var(--text-muted)">${t.urgency}</span>
+      </div>
+      <div class="detail-title">${t.title}</div>
+      <div class="detail-id">${t.id}</div>
+      <div class="detail-info-grid">
+        <div class="detail-info-item"><div class="k">问题分类</div><div class="v">${t.category}</div></div>
+        <div class="detail-info-item"><div class="k">紧急程度</div><div class="v">${t.urgency}</div></div>
+        <div class="detail-info-item"><div class="k">发起人</div><div class="v">${t.parties.split('→')[0].trim()}</div></div>
+        <div class="detail-info-item"><div class="k">当前处理方</div><div class="v">${t.current}</div></div>
+        <div class="detail-info-item"><div class="k">创建时间</div><div class="v">${t.createTime}</div></div>
+        <div class="detail-info-item"><div class="k">SLA截止</div><div class="v" style="color:${t.timeout?'var(--danger)':'var(--text)'}">${t.deadline}</div></div>
+      </div>
+      <div class="detail-description">
+        <strong>问题描述</strong>
+        ${t.desc}
+      </div>
+    </div>`;
+
+  // 尾部操作区（内联，随内容滚动）
+  const footerHtml = `
+    ${replyBox}
+    ${actionBtns.length ? `
+    <div class="detail-actions" id="detailActions">
+      ${actionBtns.join('')}
+    </div>` : ''}
+  `;
+
+  el.innerHTML = `<div class="detail-overview">${headHtml}${timelineHtml}</div>` + chatHtml + footerHtml;
+
+  // 操作按钮事件（上升处理需要先确认目标部门）
+  document.querySelectorAll('#detailActions button[data-act]').forEach(b => {
+    b.onclick = () => {
+      if (b.dataset.act === 'escalate') {
+        openEscalateConfirm(t);
+        return;
+      }
+      handleDetailAction(b.dataset.act, t);
+    };
+  });
+
+  // 图片预览
+  document.querySelectorAll('.detail-preview-img').forEach(img => {
+    img.onclick = () => openImageModal(img.src);
+  });
+
+  // 回复发送
+  const sendBtn = document.getElementById('detailSend');
+  if (sendBtn) {
+    sendBtn.onclick = () => {
+      const val = document.getElementById('detailReply').value.trim();
+      if (!val) { toast('请输入回复内容'); return; }
+      toast('回复已发送（模拟）');
+      document.getElementById('detailReply').value = '';
+      // 模拟添加消息
+      t.messages.push({
+        role: currentRole, name: ROLES[currentRole].name, roleLabel: ROLES[currentRole].name,
+        time: new Date().toLocaleString('zh-CN', { hour12: false }).replace(/\//g,'-'), text: val
+      });
+      renderDetail();
+    };
+  }
+}
+
+// ============ 详情操作处理 ============
+let pendingEscalateTicket = null;
+
+function getEscalationTarget(t) {
+  if (currentRole === 'region_fae') return '总部技术支持部门';
+  if (currentRole === 'agent2') return '一级代理商部门';
+  if (currentRole === 'agent1' || currentRole === 'service' || currentRole === 'cs') return '区域技术支持部门';
+  return t.current.includes('区域') ? '总部技术支持部门' : '区域技术支持部门';
+}
+
+function openEscalateConfirm(t) {
+  pendingEscalateTicket = t;
+  const target = getEscalationTarget(t);
+  document.getElementById('escalateMessage').innerHTML = `确认后，该工单将上升至<strong style="color:var(--primary)">${target}</strong>，当前处理节点将结束并通知对应部门。`;
+  document.getElementById('escalateModal').classList.add('open');
+  document.getElementById('escalateModal').setAttribute('aria-hidden', 'false');
+}
+
+function closeEscalateConfirm() {
+  pendingEscalateTicket = null;
+  document.getElementById('escalateModal').classList.remove('open');
+  document.getElementById('escalateModal').setAttribute('aria-hidden', 'true');
+}
+
+function confirmEscalate() {
+  if (!pendingEscalateTicket) return;
+  const ticket = pendingEscalateTicket;
+  closeEscalateConfirm();
+  handleDetailAction('escalate', ticket);
+}
+
+function handleDetailAction(act, t) {
+  const labels = { accept:'确认承接', escalate:'上升', close:'关单' };
+  toast(`执行【${labels[act]}】操作（模拟）`);
+  // 模拟状态变更
+  if (act === 'escalate') {
+    if (currentRole === 'agent2') t.parties = t.parties + ' → 一级代理（上升）';
+    else if (currentRole === 'agent1' || currentRole === 'region_fae' || currentRole === 'cs') t.parties = t.parties + ' → 总部技术支持（上升）';
+    t.status = 'escalated';
+    t.current = ROLES[currentRole].name + ' 上升至更高级';
+    t.timeline.push({ actor: ROLES[currentRole].name, action: `上升处理`, time: new Date().toLocaleString('zh-CN', { hour12: false }).replace(/\//g,'-'), dot:'orange' });
+  } else if (act === 'close') {
+    t.status = 'closed';
+    t.current = '已关单';
+    t.timeline.push({ actor: ROLES[currentRole].name, action: '关单', time: new Date().toLocaleString('zh-CN', { hour12: false }).replace(/\//g,'-'), dot:'success' });
+  } else if (act === 'accept') {
+    t.status = 'processing';
+    t.current = ROLES[currentRole].name + ' 处理中';
+  }
+  renderDetail();
+}
+
+// ============ 消息中心 ============
+let currentMsgFilter = 'all';
+const MSGS = [
+  { icon:'📩', iconCls:'blue', title:'工单有新回复', content:'工单 TK20261101001 区域技术支持 王工 回复了你的消息', time:'10分钟前', unread:true, type:'ticket' },
+  { icon:'⏰', iconCls:'orange', title:'即将超时提醒', content:'工单 TK20261102015 距离 SLA 截止还有 12 小时', time:'1小时前', unread:true, type:'timeout' },
+  { icon:'🎉', iconCls:'green', title:'工单已解决', content:'工单 TK20261025003 已标记为已解决，请确认并关单', time:'2小时前', unread:false, type:'ticket' },
+  { icon:'📢', iconCls:'blue', title:'系统升级通知', content:'系统将于 2026-11-10 22:00 进行例行升级，请提前保存工作', time:'3小时前', unread:false, type:'notify' },
+  { icon:'🔴', iconCls:'red', title:'严重超时', content:'工单 TK20261028007 已超时 48 小时，请立即处理', time:'5小时前', unread:true, type:'timeout' },
+  { icon:'📨', iconCls:'blue', title:'工单已上升', content:'工单 TK20261028007 客服 小孙 已上升至总部技术支持', time:'6小时前', unread:true, type:'ticket' },
+  { icon:'❓', iconCls:'blue', title:'待你确认关单', content:'工单 TK20261020009 等待你确认客户评价后关单', time:'1天前', unread:false, type:'notify' },
+  { icon:'✅', iconCls:'green', title:'工单已关单', content:'工单 TK20261020009 已成功关单', time:'2天前', unread:false, type:'ticket' },
+];
+function renderMessages() {
+  let list = MSGS.slice();
+  if (currentMsgFilter !== 'all') list = list.filter(m => m.type === currentMsgFilter);
+  const el = document.getElementById('msgList');
+  if (!list.length) { el.innerHTML = `<div class="empty"><div class="text">暂无消息</div></div>`; return; }
+  el.innerHTML = list.map(m => `
+    <div class="msg-item ${m.unread ? 'unread' : ''}">
+      <div class="msg-icon ${m.iconCls}">${m.icon}</div>
+      <div class="msg-body">
+        <div class="msg-title">${m.title}</div>
+        <div class="msg-content">${m.content}</div>
+        <div class="msg-time">${m.time}</div>
+      </div>
+      ${m.unread ? '<div class="msg-unread-dot"></div>' : ''}
+    </div>`).join('');
+
+  document.querySelectorAll('.msg-tab').forEach(t => {
+    t.onclick = () => {
+      document.querySelectorAll('.msg-tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      currentMsgFilter = t.dataset.mtype;
+      renderMessages();
+    };
+  });
+}
+
+// ============ 时效看板 ============
+function renderDashboard() {
+  const roles = [
+    { label:'客服', val: 3.2, color:'blue' },
+    { label:'区域技术支持', val: 4.5, color:'orange' },
+    { label:'总部技术支持', val: 8.2, color:'orange' },
+    { label:'一级代理', val: 2.1, color:'green' },
+    { label:'服务商', val: 5.8, color:'orange' },
+    { label:'二级代理', val: 1.5, color:'green' },
+  ];
+  const maxVal = Math.max(...roles.map(r => r.val));
+  document.getElementById('roleBarChart').innerHTML = roles.map(r => `
+    <div class="bar-row">
+      <div class="bar-label">${r.label}</div>
+      <div class="bar-track"><div class="bar-fill ${r.color}" style="width:${Math.round(r.val/maxVal*100)}%">${r.val}h</div></div>
+    </div>`).join('');
+
+  const reasons = [
+    { label:'等待客户回复', val: 18, color:'orange' },
+    { label:'等待配件', val: 12, color:'red' },
+    { label:'技术疑难', val: 8, color:'blue' },
+    { label:'远程协助困难', val: 6, color:'orange' },
+    { label:'内部流程卡壳', val: 4, color:'red' },
+  ];
+  const maxR = Math.max(...reasons.map(r => r.val));
+  document.getElementById('reasonBarChart').innerHTML = reasons.map(r => `
+    <div class="bar-row">
+      <div class="bar-label">${r.label}</div>
+      <div class="bar-track"><div class="bar-fill ${r.color}" style="width:${Math.round(r.val/maxR*100)}%">${r.val}单</div></div>
+    </div>`).join('');
+
+  // 趋势图
+  const trendData = [5, 8, 12, 6, 15, 10, 3];
+  const maxT = Math.max(...trendData);
+  const trendContainer = document.querySelectorAll('.card-body')[2];
+  if (trendContainer && trendContainer.style.height) {
+    trendContainer.style.height = '140px';
+    trendContainer.innerHTML = trendData.map(v => {
+      const h = Math.round(v / maxT * 120) + 10;
+      return `<div style="flex:1;background:var(--primary);border-radius:4px 4px 0 0;height:${h}px;align-self:flex-end;display:flex;align-items:flex-start;justify-content:center;color:#fff;font-size:10px;padding-top:2px">${v}</div>`;
+    }).join('');
+  }
+}
+
+// ============ 我的 ============
+function renderProfile() {
+  const role = ROLES[currentRole];
+  document.getElementById('profileAvatar').textContent = role.name.slice(0,1);
+  document.getElementById('profileName').textContent = '当前登录人（演示）';
+  document.getElementById('profileOrg').textContent = role.scope;
+  document.getElementById('profileRoleTag').textContent = '当前角色：' + role.name;
+}
+
+// ============ 角色切换器 ============
+function initRoleSwitcher() {
+  const menu = document.getElementById('roleMenu');
+  menu.innerHTML = Object.entries(ROLES).map(([key, r]) => `
+    <li class="role-menu-item" data-role="${key}">
+      <span class="dot" style="background:${r.color}"></span>
+      <span>${r.name}</span>
+      <span class="check" id="roleCheck_${key}" style="display:none">✓</span>
+    </li>`).join('');
+
+  document.querySelectorAll('.role-menu-item').forEach(item => {
+    item.onclick = () => {
+      currentRole = item.dataset.role;
+      updateRoleSwitcherUI();
+      toast('已切换为：' + ROLES[currentRole].name);
+      closeRoleMenu();
+      render();
+    };
+  });
+
+  document.getElementById('roleSwitcherBtn').onclick = () => {
+    const btn = document.getElementById('roleSwitcherBtn');
+    if (menu.classList.contains('open')) closeRoleMenu();
+    else { menu.classList.add('open'); btn.classList.add('open'); }
+  };
+
+  document.addEventListener('click', e => {
+    const sw = document.getElementById('roleSwitcher');
+    if (!sw.contains(e.target)) closeRoleMenu();
+  });
+}
+function closeRoleMenu() {
+  document.getElementById('roleMenu').classList.remove('open');
+  document.getElementById('roleSwitcherBtn').classList.remove('open');
+}
+function updateRoleSwitcherUI() {
+  const role = ROLES[currentRole];
+  const btn = document.getElementById('roleSwitcherBtn');
+  btn.innerHTML = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${role.color};margin-right:4px"></span>当前：${role.name} ▾`;
+  document.querySelectorAll('.role-menu-item').forEach(item => {
+    const active = item.dataset.role === currentRole;
+    item.classList.toggle('active', active);
+    document.getElementById('roleCheck_' + item.dataset.role).style.display = active ? 'inline' : 'none';
+  });
+}
+
+// ============ 图片预览 ============
+function openImageModal(src) {
+  document.getElementById('imageModalImg').src = src;
+  document.getElementById('imageModal').classList.add('open');
+}
+document.getElementById('imageModalClose').onclick = () => document.getElementById('imageModal').classList.remove('open');
+document.getElementById('imageModal').addEventListener('click', e => {
+  if (e.target.id === 'imageModal') document.getElementById('imageModal').classList.remove('open');
+});
+
+// ============ Toast ============
+function toast(msg) {
+  let t = document.getElementById('globalToast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'globalToast';
+    t.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.75);color:#fff;padding:10px 20px;border-radius:6px;font-size:13px;z-index:200;pointer-events:none;opacity:0;transition:opacity .2s';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._hideTimer);
+  t._hideTimer = setTimeout(() => t.style.opacity = '0', 1800);
+}
+
+// ============ 事件绑定 ============
+document.getElementById('headerBack').onclick = () => {
+  if (currentRoute === 'detail') navigate('list');
+};
+document.getElementById('fab').onclick = () => {
+  if (ROLES[currentRole].canCreate) navigate('create');
+  else toast('当前角色无发起权限');
+};
+document.querySelectorAll('.sidebar-item').forEach(s => {
+  s.onclick = () => navigate(s.dataset.tab);
+});
+document.querySelectorAll('.tabbar-item').forEach(t => {
+  t.onclick = () => navigate(t.dataset.tab);
+});
+document.getElementById('submitBtn').onclick = () => {
+  toast('工单已提交（模拟）');
+  setTimeout(() => navigate('list'), 800);
+};
+
+// ============ 上传区模拟 ============
+const uploadBtn = document.getElementById('uploadBtn');
+uploadBtn.onclick = () => {
+  const texts = ['📄 规格书.pdf', '🖼 现场照片.jpg', '🎬 故障视频.mp4', '📋 日志文件.log'];
+  const txt = texts[Math.floor(Math.random() * texts.length)];
+  const item = document.createElement('div');
+  item.className = 'upload-item';
+  item.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;font-size:20px;color:#8C8C8C">📎</div><div class="upload-close">✕</div>`;
+  item.title = txt;
+  uploadBtn.parentElement.insertBefore(item, uploadBtn);
+  item.querySelector('.upload-close').onclick = (e) => { e.stopPropagation(); item.remove(); };
+  toast('已添加：' + txt);
+};
+
+// ============ 初始化 ============
+document.getElementById('escalateCancel').onclick = closeEscalateConfirm;
+document.getElementById('escalateConfirm').onclick = confirmEscalate;
+document.getElementById('escalateModal').addEventListener('click', e => {
+  if (e.target.id === 'escalateModal') closeEscalateConfirm();
+});
+parseHash();
+initRoleSwitcher();
+updateRoleSwitcherUI();
+render();
+</script>
+</body>
+</html>
