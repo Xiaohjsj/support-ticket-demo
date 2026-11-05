@@ -146,6 +146,19 @@ img { max-width: 100%; display: block; }
 .header-back:active { background: var(--surface-hover); }
 .header-title { flex: 1; text-align: center; font-size: 16px; font-weight: 600; }
 .header-right { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 12px; }
+.detail-mode .header { height: 56px; padding: 0 10px; }
+.detail-mode .header-back { width: 28px; flex-shrink: 0; }
+.detail-mode .header-title {
+  text-align: left; font-size: 14px; min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.header-actions { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; flex-shrink: 0; margin-left: 6px; }
+.header-actions .btn {
+  height: 40px; min-height: 40px; padding: 0 9px;
+  font-size: 13px; font-weight: 600; letter-spacing: 0;
+  border-radius: var(--radius-lg); flex-shrink: 0;
+}
+.header-actions .btn-accepted { padding: 0 9px; }
 
 /* ========== 路由视图 ========== */
 .views {
@@ -155,7 +168,7 @@ img { max-width: 100%; display: block; }
   padding-top: 0;
   padding-bottom: calc(var(--tabbar-height) + 80px);
 }
-.views.view-detail { padding-bottom: 76px; }
+.views.view-detail { padding-bottom: 128px; }
 .view { display: none; animation: fadeIn .2s; }
 .view.active { display: block; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
@@ -512,31 +525,10 @@ img { max-width: 100%; display: block; }
 }
 .chat-attach img { width: 48px; height: 48px; border-radius: 4px; object-fit: cover; cursor: pointer; }
 
-/* 详情页底部固定操作栏（挂在最外层主框架） */
-.detail-actions {
-  position: fixed;
-  z-index: 25;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  min-height: 64px;
-  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
-  background: rgba(255,255,255,.97);
-  border-top: 1px solid var(--border-light);
-  box-shadow: 0 -4px 16px rgba(0,0,0,.08);
-  backdrop-filter: blur(10px);
-}
-.detail-actions .btn {
-  flex: 1;
-  min-width: 0;
-  padding-left: 8px;
-  padding-right: 8px;
-  flex-shrink: 0;
-}
+/* 详情页顶部操作按钮 */
+.detail-actions { display: contents; }
+.detail-actions .btn { white-space: nowrap; }
+.detail-actions .btn-outline-danger { color: var(--danger); border-color: #FFCCC7; }
 .detail-reply-box {
   background: var(--surface);
   border-radius: var(--radius-lg);
@@ -556,13 +548,43 @@ img { max-width: 100%; display: block; }
   display: flex; gap: 8px; margin-top: 10px; align-items: center;
 }
 .detail-reply-box .reply-hint { font-size: 12px; color: var(--text-muted); flex: 1; }
+
+/* ========== 承接前聊天区锁定 ========== */
+.chat-lock-notice {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 10px 12px; margin-bottom: 10px;
+  background: #FFF7E6; border: 1px dashed #FFD591;
+  border-radius: var(--radius-md);
+  font-size: 12px; color: #AD6800; line-height: 1.6;
+}
+.chat-lock-notice .lock-icon { font-size: 14px; line-height: 1.4; }
+.chat-list.locked {
+  opacity: .35; filter: blur(3px);
+  pointer-events: none; user-select: none;
+  max-height: 220px; overflow: hidden;
+}
+.chat-system {
+  align-self: center; max-width: 90%; text-align: center;
+  padding: 3px 10px; border-radius: 10px;
+  background: var(--bg); color: var(--text-muted);
+  font-size: 11px; line-height: 1.6;
+}
+.detail-reply-box.locked { opacity: .9; }
+.detail-reply-box.locked textarea {
+  background: #F5F5F5; color: var(--text-disabled);
+  cursor: not-allowed; border-color: var(--border-light);
+}
+.detail-reply-box.locked .reply-hint { color: var(--warning); }
+.btn-accepted {
+  background: #F6FFED; color: var(--success);
+  border-color: #B7EB8F; pointer-events: none;
+}
 @media (min-width: 900px) {
-  .detail-actions {
-    left: 220px;
-    padding-left: 24px;
-    padding-right: 24px;
-  }
-  .detail-actions .btn { flex: 0 1 auto; min-width: 104px; }
+  .detail-mode .header { height: 64px; padding: 0 16px; }
+  .detail-mode .header-back { width: 32px; }
+  .detail-mode .header-title { font-size: 16px; }
+  .header-actions { gap: 10px; margin-left: 12px; }
+  .header-actions .btn { height: 44px; min-height: 44px; padding: 0 18px; font-size: 14px; min-width: 96px; }
   .detail-reply-box { margin: 12px 24px; }
 }
 
@@ -668,7 +690,7 @@ img { max-width: 100%; display: block; }
   position: fixed; bottom: 76px; right: 16px;
   z-index: 30;
 }
-.detail-mode .role-switcher { bottom: 140px; }
+.detail-mode .role-switcher { bottom: 76px; }
 .role-switcher-btn {
   display: flex; align-items: center; gap: 4px;
   padding: 8px 12px; background: var(--primary);
@@ -1058,7 +1080,10 @@ function render() {
   if (active) active.classList.add('active');
 
   // 头部
-  document.getElementById('headerTitle').textContent = HEADER_MAP[currentRoute] || '';
+  document.getElementById('headerTitle').textContent = currentRoute === 'detail' && currentTicketId
+    ? `工单详情 ${currentTicketId}`
+    : (HEADER_MAP[currentRoute] || '');
+  document.getElementById('headerRight').innerHTML = '';
   document.getElementById('headerBack').style.display = (currentRoute === 'detail') ? 'flex' : 'none';
 
   // Tab Bar 显隐
@@ -1206,6 +1231,42 @@ const STATUS_MAP = {
   closed:     { label:'已关单', tag:'tag-gray' }
 };
 
+// ============ 承接状态（localStorage 演示持久化） ============
+const ACCEPT_STORE_KEY = 'ts_ticket_accepted_v1';
+
+function loadAcceptRecords() {
+  try {
+    const raw = localStorage.getItem(ACCEPT_STORE_KEY);
+    return raw ? (JSON.parse(raw) || {}) : {};
+  } catch (e) { return {}; }
+}
+function getAcceptRecord(id) { return loadAcceptRecords()[id] || null; }
+function saveAcceptRecord(id, record) {
+  if (getAcceptRecord(id)) return; // 幂等：已有承接记录则不重复写入
+  try {
+    const all = loadAcceptRecords();
+    all[id] = record;
+    localStorage.setItem(ACCEPT_STORE_KEY, JSON.stringify(all));
+  } catch (e) { /* 隐私模式下静默降级 */ }
+}
+// 已承接 = 已脱离待承接状态，或本地存在承接记录
+function isAccepted(t) { return t.status !== 'pending' || !!getAcceptRecord(t.id); }
+
+// 刷新后按本地记录恢复承接结果（不重复追加时间线）
+function syncAcceptedState(t) {
+  const rec = getAcceptRecord(t.id);
+  if (!rec || t._acceptApplied || t.status !== 'pending') return;
+  t._acceptApplied = true;
+  t.status = 'processing';
+  t.current = rec.roleName + ' 处理中';
+  if (!t.messages.some(m => m.system)) {
+    t.messages.push({ system: true, time: rec.time, text: `${rec.roleName} 已承接该工单，可以开始沟通` });
+  }
+  if (!t.timeline.some(i => i.action === '承接工单')) {
+    t.timeline.push({ actor: rec.roleName, action: '承接工单', time: rec.time, dot: 'success' });
+  }
+}
+
 // ============ 工单列表渲染 ============
 let currentListFilter = 'all';
 function renderList() {
@@ -1271,19 +1332,32 @@ function renderDetail() {
   const t = TICKETS.find(x => x.id === currentTicketId);
   const el = document.getElementById('detailContent');
   if (!t) { el.innerHTML = `<div class="empty"><div class="text">工单不存在</div></div>`; return; }
+  syncAcceptedState(t);
   const st = STATUS_MAP[t.status];
   const role = ROLES[currentRole];
+  const accepted = isAccepted(t);
+  // 未承接：聊天区锁定，承接后才可沟通
+  const chatLocked = t.status === 'pending' && !accepted;
 
   // 操作按钮（根据角色权限和状态动态生成）— 内联在内容末尾
   let actionBtns = [];
   let replyBox = '';
   if (['pending','processing','escalated'].includes(t.status)) {
-    if (t.status === 'pending' && role.canReply) actionBtns.push(`<button class="btn btn-primary" data-act="accept">确认承接</button>`);
+    if (t.status === 'pending' && !accepted && role.canReply) actionBtns.push(`<button class="btn btn-primary" data-act="accept">确认承接</button>`);
+    if (t.status !== 'pending' && getAcceptRecord(t.id)) actionBtns.push(`<button class="btn btn-accepted" disabled>✓ 已承接</button>`);
     if (role.canEscalate) actionBtns.push(`<button class="btn btn-default" data-act="escalate">上升处理</button>`);
     if (role.canClose) actionBtns.push(`<button class="btn btn-outline-danger" data-act="close">关单</button>`);
-    // 回复输入框（有答复权限的角色可发消息）
+    // 回复输入框（有回复权限的角色可发消息）；未承接时禁用
     if (role.canReply || role.canCreate) {
-      replyBox = `
+      replyBox = chatLocked ? `
+      <div class="detail-reply-box locked">
+        <textarea id="detailReply" disabled placeholder="承接工单后可发送消息"></textarea>
+        <div class="reply-bar">
+          <button class="btn btn-default btn-sm" disabled>📎 附件</button>
+          <span class="reply-hint">🔒 承接工单后可与用户沟通</span>
+          <button class="btn btn-primary btn-sm" disabled>发送</button>
+        </div>
+      </div>` : `
       <div class="detail-reply-box">
         <textarea id="detailReply" placeholder="输入消息内容，支持文字、附件、图片..."></textarea>
         <div class="reply-bar">
@@ -1325,11 +1399,19 @@ function renderDetail() {
     </div>`;
 
   // 沟通气泡
+  const msgCount = t.messages.filter(m => !m.system).length;
+  const lockNotice = chatLocked ? `
+      <div class="chat-lock-notice">
+        <span class="lock-icon">🔒</span>
+        <span>承接工单后可与用户沟通${(role.canReply || role.canCreate) ? '' : '（当前角色无承接权限）'}</span>
+      </div>` : '';
   const chatHtml = `
     <div class="chat-section">
-      <div class="chat-title">💬 多轮沟通记录 <span class="count">${t.messages.length} 条回复</span></div>
-      <div class="chat-list">
+      <div class="chat-title">💬 多轮沟通记录 <span class="count">${msgCount} 条回复</span></div>
+      ${lockNotice}
+      <div class="chat-list ${chatLocked ? 'locked' : ''}">
         ${t.messages.map(m => {
+          if (m.system) return `<div class="chat-system">${m.text}</div>`;
           const mine = (m.role === currentRole);
           const attachHtml = m.attachments && m.attachments.length ? `
             <div class="chat-attachments">
@@ -1382,19 +1464,19 @@ function renderDetail() {
     </div>`;
 
   // 尾部操作区（内联，随内容滚动）
-  const footerHtml = `
-    ${replyBox}
-    ${actionBtns.length ? `
-    <div class="detail-actions" id="detailActions">
-      ${actionBtns.join('')}
-    </div>` : ''}
-  `;
+  const footerHtml = `${replyBox}`;
+  const headerRight = document.getElementById('headerRight');
+  headerRight.innerHTML = actionBtns.length ? `<div class="header-actions" id="detailActions">${actionBtns.join('')}</div>` : '';
 
   el.innerHTML = `<div class="detail-overview">${headHtml}${timelineHtml}</div>` + chatHtml + footerHtml;
 
   // 操作按钮事件（上升处理需要先确认目标部门）
   document.querySelectorAll('#detailActions button[data-act]').forEach(b => {
     b.onclick = () => {
+      if (b.dataset.act === 'accept') {
+        acceptTicket(t);
+        return;
+      }
       if (b.dataset.act === 'escalate') {
         openEscalateConfirm(t);
         return;
@@ -1429,6 +1511,28 @@ function renderDetail() {
 // ============ 详情操作处理 ============
 let pendingEscalateTicket = null;
 
+// 承接工单：幂等，先显示「承接中」再落库并解锁沟通区
+function acceptTicket(t) {
+  if (isAccepted(t)) return; // 重复点击直接忽略
+  const btn = document.querySelector('#detailActions button[data-act="accept"]');
+  if (!btn || btn.disabled) return;
+  btn.disabled = true;
+  btn.textContent = '承接中…';
+
+  setTimeout(() => {
+    // 另一路径已写入记录时不重复处理
+    if (t.status === 'pending' && !getAcceptRecord(t.id)) {
+      saveAcceptRecord(t.id, {
+        role: currentRole,
+        roleName: ROLES[currentRole].name,
+        time: new Date().toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '-')
+      });
+    }
+    toast('已承接工单，可开始与用户沟通');
+    renderDetail();
+  }, 600);
+}
+
 function getEscalationTarget(t) {
   if (currentRole === 'region_fae') return '总部技术支持部门';
   if (currentRole === 'agent2') return '一级代理商部门';
@@ -1458,7 +1562,7 @@ function confirmEscalate() {
 }
 
 function handleDetailAction(act, t) {
-  const labels = { accept:'确认承接', escalate:'上升', close:'关单' };
+  const labels = { escalate:'上升', close:'关单' };
   toast(`执行【${labels[act]}】操作（模拟）`);
   // 模拟状态变更
   if (act === 'escalate') {
@@ -1471,9 +1575,6 @@ function handleDetailAction(act, t) {
     t.status = 'closed';
     t.current = '已关单';
     t.timeline.push({ actor: ROLES[currentRole].name, action: '关单', time: new Date().toLocaleString('zh-CN', { hour12: false }).replace(/\//g,'-'), dot:'success' });
-  } else if (act === 'accept') {
-    t.status = 'processing';
-    t.current = ROLES[currentRole].name + ' 处理中';
   }
   renderDetail();
 }
